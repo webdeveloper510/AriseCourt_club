@@ -9,6 +9,7 @@ import {
   ImageBackground,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Colors from '../constant/Colors';
 import theme from '../constant/theme';
@@ -17,7 +18,7 @@ const { height, width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation, route }) => {
   const { data = [] } = route.params || {};
-
+  const [isLoading,setIsLoading] = useState(false);
   console.log('data#######=====>', data);
 
   const [showModal, setShowModal] = useState(data?.length === 0);
@@ -35,6 +36,13 @@ const HomeScreen = ({ navigation, route }) => {
       setCurrentIndex(currentIndex - 1);
     }
   };
+  const onRefrash =()=>{
+    setIsLoading(true);
+    setCurrentIndex(0);
+    setTimeout(()=>{
+      setIsLoading(false);
+    },1000)
+  }
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ImageBackground
@@ -48,111 +56,127 @@ const HomeScreen = ({ navigation, route }) => {
           position: 'relative',
         }}
       >
-      
-          {currentCourt ? (
-           <>
-             <View style={styles.leftArrow}>
-            <TouchableOpacity
-              onPress={handlePrevious}
-              disabled={currentIndex === 0}
-            >
-              <Image
-                source={require('../assets/left.png')}
-                style={{
-                  width: 30,
-                  height: 20,
-                  opacity: currentIndex === 0 ? 0.3 : 1,
-                }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
+        <TouchableOpacity
+          style={{
+            width: 60,
+            height: 30,
+            backgroundColor: 'red',
+            left: 25,
+            top: 35,
+            justifyContent:'center',
+            alignItems:'center',
+            borderRadius:10,
+            backgroundColor:'#1D2A4D',
+            position:'absolute'
+          }}
+          onPress={onRefrash}
+        >
+         {isLoading ? <ActivityIndicator size={"small"} color={"#ffffff"}/> :<Text style={{color:'#ffffff'}}>Refrash</Text> } 
+        </TouchableOpacity>
+        {currentCourt ? (
+          <>
+            <View style={styles.leftArrow}>
+              <TouchableOpacity
+                onPress={handlePrevious}
+                disabled={currentIndex === 0}
+              >
+                <Image
+                  source={require('../assets/left.png')}
+                  style={{
+                    width: 30,
+                    height: 20,
+                    opacity: currentIndex === 0 ? 0.3 : 1,
+                  }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.courtNumberBanner}>
-            <Text style={styles.courtNumberTitle}>Court Number</Text>
-            <Text style={styles.courtNumberValue}>
-              {currentCourt.court_number}
-            </Text>
-          </View>
-          <View style={styles.card}>
-            {/* Court Number Banner */}
-            {/* <View style={styles.courtNumberBanner}>
+            <View style={styles.courtNumberBanner}>
+              <Text style={styles.courtNumberTitle}>Court Number</Text>
+              <Text style={styles.courtNumberValue}>
+                {currentCourt.court_number}
+              </Text>
+            </View>
+            <View style={styles.card}>
+              {/* Court Number Banner */}
+              {/* <View style={styles.courtNumberBanner}>
               <Text style={styles.courtNumberTitle}>Court Number</Text>
               <Text style={styles.courtNumberValue}>08</Text>
             </View> */}
-            <View style={styles.leftView}>
-              <View style={styles.box}>
-                <View>
-                  <Text style={styles.label}>Reserved For</Text>
-                  <Text style={styles.value}>{currentCourt?.user_name}</Text>
+              <View style={styles.leftView}>
+                <View style={styles.box}>
+                  <View>
+                    <Text style={styles.label}>Reserved For</Text>
+                    <Text style={styles.value}>{currentCourt?.user_name}</Text>
+                  </View>
+                </View>
+                <View style={styles.box}>
+                  <View>
+                    <Text style={styles.label}>Reserved Date</Text>
+                    <Text style={styles.value}>
+                      {currentCourt?.booking_date}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <View style={styles.box}>
-                <View>
-                  <Text style={styles.label}>Reserved Date</Text>
-                  <Text style={styles.value}>{currentCourt?.booking_date}</Text>
+              <View style={styles.centerView}>
+                <View style={styles.centerBox}>
+                  <Image
+                    source={require('../assets/logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.logoText}>Arise{'\n'}Court</Text>
+                </View>
+              </View>
+              <View style={styles.rightView}>
+                <View style={styles.box}>
+                  <View>
+                    <Text style={[styles.label, { textAlign: 'right' }]}>
+                      From Time
+                    </Text>
+                    <Text style={styles.value}>
+                      {moment(currentCourt?.start_time, 'HH:mm').format(
+                        'hh:mm A',
+                      )}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.box}>
+                  <View>
+                    <Text style={[styles.label, { textAlign: 'right' }]}>
+                      To Time
+                    </Text>
+                    <Text style={styles.value}>
+                      {moment(currentCourt.end_time, 'HH:mm').format('hh:mm A')}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
-            <View style={styles.centerView}>
-              <View style={styles.centerBox}>
+            <View style={styles.rightArrow}>
+              <TouchableOpacity
+                onPress={handleNext}
+                disabled={currentIndex === data.length - 1}
+              >
                 <Image
-                  source={require('../assets/logo.png')}
-                  style={styles.logo}
+                  source={require('../assets/right.png')}
+                  style={{
+                    width: 30,
+                    height: 20,
+                    opacity: currentIndex === data.length - 1 ? 0.3 : 1,
+                  }}
                   resizeMode="contain"
                 />
-                <Text style={styles.logoText}>Arise{'\n'}Court</Text>
-              </View>
+              </TouchableOpacity>
             </View>
-            <View style={styles.rightView}>
-              <View style={styles.box}>
-                <View>
-                  <Text style={[styles.label, { textAlign: 'right' }]}>
-                    From Time
-                  </Text>
-                  <Text style={styles.value}>
-                    {moment(currentCourt?.start_time, 'HH:mm').format(
-                      'hh:mm A',
-                    )}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.box}>
-                <View>
-                  <Text style={[styles.label, { textAlign: 'right' }]}>
-                    To Time
-                  </Text>
-                  <Text style={styles.value}>
-                    {moment(currentCourt.end_time, 'HH:mm').format('hh:mm A')}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          <View style={styles.rightArrow}>
-            <TouchableOpacity
-              onPress={handleNext}
-              disabled={currentIndex === data.length - 1}
-            >
-              <Image
-                source={require('../assets/right.png')}
-                style={{
-                  width: 30,
-                  height: 20,
-                  opacity: currentIndex === data.length - 1 ? 0.3 : 1,
-                }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
-           </>
-          ) : (
-            <Text style={{ color: 'white', fontSize: 18 }}>
-              No court data available
-            </Text>
-          )}
-        
-     
+          </>
+        ) : (
+          <Text style={{ color: 'white', fontSize: 18 }}>
+            No court data available
+          </Text>
+        )}
       </ImageBackground>
     </SafeAreaView>
   );
