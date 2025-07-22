@@ -21,7 +21,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import CountryPicker from '../components/CountryPicker';
 import { getAllCourts, getCourtById, SignInApi } from '../Apis';
 import { showMessage } from 'react-native-flash-message';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
@@ -128,7 +128,7 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
       setIsLoading(true);
-      let data = {
+      const data = {
         email: email,
         password: password,
         location_id: selectedType,
@@ -139,6 +139,7 @@ const LoginScreen = ({ navigation }) => {
       if (res.code == '400') {
         showMessage({ message: res.message, type: 'danger' });
       } else {
+         await AsyncStorage.setItem('userCredentials', JSON.stringify(data));
         navigation.navigate('MainStack', {
           screen: 'Home', // inside MainStack
           params: { data: res.slots },

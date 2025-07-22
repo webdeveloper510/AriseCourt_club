@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,17 @@ import Colors from '../constant/Colors';
 import theme from '../constant/theme';
 import moment from 'moment';
 const { height, width } = Dimensions.get('window');
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+import { SignInApi } from '../Apis';
 const HomeScreen = ({ navigation, route }) => {
+  const isFocused = useIsFocused();
   const { data = [] } = route.params || {};
-  const [isLoading,setIsLoading] = useState(false);
-  console.log('data#######=====>', data);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [courtData, setCourtData] = useState(data);
   const [showModal, setShowModal] = useState(data?.length === 0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const currentCourt = data[currentIndex];
+  const currentCourt = courtData[currentIndex];
 
   const handleNext = () => {
     if (currentIndex < data.length - 1) {
@@ -36,13 +38,58 @@ const HomeScreen = ({ navigation, route }) => {
       setCurrentIndex(currentIndex - 1);
     }
   };
-  const onRefrash =()=>{
+  const onRefrash = () => {
     setIsLoading(true);
     setCurrentIndex(0);
-    setTimeout(()=>{
+    setTimeout(() => {
       setIsLoading(false);
-    },1000)
-  }
+    }, 1000);
+  };
+
+  const onRefrash1 = async () => {
+
+    try {
+      const credentials = await AsyncStorage.getItem('userCredentials');
+      if (!credentials) {
+        console.log('No credentials found.');
+        setIsLoading(false);
+        return;
+      }
+
+      const { email, password, location_id, court_id } =
+        JSON.parse(credentials);
+
+      // Replace with your actual login endpoint
+      const response = await SignInApi({
+        email,
+        password,
+        location_id,
+        court_id
+      });
+
+      if (response?.data?.courtData) {
+        setCourtData(response.data.courtData);
+        setCurrentIndex(0);
+      }
+    } catch (error) {
+      console.error('Failed to refresh court data:', error);
+    } 
+  };
+
+  // Auto-refresh every 15 minutes
+  useEffect(() => {
+    let interval;
+
+    if (isFocused) {
+      interval = setInterval(() => {
+        onRefrash1();
+      }, 15 * 60 * 1000); // 15 minutes
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isFocused]);
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ImageBackground
@@ -63,15 +110,22 @@ const HomeScreen = ({ navigation, route }) => {
             backgroundColor: 'red',
             left: 25,
             top: 35,
-            justifyContent:'center',
-            alignItems:'center',
-            borderRadius:10,
-            backgroundColor:'#1D2A4D',
-            position:'absolute'
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 10,
+            backgroundColor: '#1D2A4D',
+            position: 'absolute',
           }}
           onPress={onRefrash}
         >
-         {isLoading ? <ActivityIndicator size={"small"} color={"#ffffff"}/> :<Text style={{color:'#ffffff'}}>Refrash</Text> } 
+          {isLoading ? (
+            <ActivityIndicator size={'small'} color={'#ffffff'} />
+          ) : (
+            <Image
+              source={require('../assets/refresh.png')}
+              style={{ width: 25, height: 25 }}
+            />
+          )}
         </TouchableOpacity>
         {currentCourt ? (
           <>
